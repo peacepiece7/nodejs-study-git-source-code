@@ -3,7 +3,15 @@ const mongoose = require('mongoose')
 const passport = require('passport')
 const dotenv = require('dotenv')
 const path = require('path')
+const config = require('config')
 const User = require('./models/users.model_me')
+const {
+  checkAuthenticated,
+  checkNotAuthenticated,
+} = require('./middleware/auth')
+
+const mainRouter = require('./routes/main.router')
+
 const cookieSession = require('cookie-session')
 
 dotenv.config()
@@ -78,11 +86,12 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 
-app.get('/', (req, res) => {
+app.use('/', mainRouter)
+app.get('/', checkAuthenticated, (req, res) => {
   res.render('index')
 })
 
-app.get('/login', (req, res) => {
+app.get('/login', checkNotAuthenticated, (req, res) => {
   res.render('login')
 })
 
@@ -112,7 +121,7 @@ app.post('/login', async (req, res, next) => {
   authHandler(req, res, next)
 })
 
-app.get('/signup', (req, res) => {
+app.get('/signup', checkNotAuthenticated, (req, res) => {
   res.render('signup')
 })
 
@@ -127,6 +136,26 @@ app.post('/signup', async (req, res) => {
   }
 })
 
-app.listen(process.env.PORT, () => {
+app.post('/logout', (req, res, next) => {
+  req.logOut(function (err) {
+    if (err) {
+      return next(err)
+    }
+    res.redirect('/login')
+  })
+})
+
+app.use('/auth', authRouter)
+
+app.get('/auth/google', passport.authenticate('google'))
+app.get(
+  '/auth/google/callback',
+  passport.authenticate('google', {
+    successReturnToOrRedirect: '/',
+    failureRedirect: '/login',
+  })
+)
+
+app.listen(config.get('server').port, () => {
   console.log(`Server is running on port ${process.env.PORT}`)
 })

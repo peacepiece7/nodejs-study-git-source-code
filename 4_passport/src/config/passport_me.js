@@ -1,5 +1,6 @@
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
+const GoogleStrategy = require('passport-google-oauth20').Strategy
 const User = require('../models/users.model_me')
 
 // req.login(user)
@@ -44,3 +45,38 @@ passport.use(
     }
   )
 )
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+
+const googleStrategyConfig = new GoogleStrategy(
+  {
+    clientID: googleClientId,
+    clientSecret: googleClientSecret,
+    callbackURL: '/auth/google/callback',
+    scope: ['email', 'profile'],
+  },
+  (accessToken, refreshToken, profile, done) => {
+    User.findOne({ googleId: profile.id }, (err, existingUser) => {
+      if (err) {
+        return done(err)
+      }
+
+      if (existingUser) {
+        return done(null, existingUser)
+      } else {
+        const user = new User()
+        user.googleId = profile.id
+        user.email = profile.emails[0].value
+        user.save((err) => {
+          if (err) {
+            return done(err)
+          }
+          done(null, user)
+        })
+      }
+    })
+  }
+)
+
+passport.use('google', googleStrategyConfig)
