@@ -19,13 +19,19 @@
 - SQL을 직접 작성하지 않고, 코드로 데이터베이스를 다룸
 - sequelize, typeORM, prisma 등 이 있음
 
-## 시작
+## 순서
+
+### docker-compose로 postgresql 서버 실행
 
 1. express 서버 생성
 2. typeORM 설치
 3. npx typeorm init
-4. docker-compose.yml 생성 후 docker-compose up -d 실행
+4. docker-compose.yml 생성 후 `docker-compose up -d` 실행
    4-1. -d 옵션은 백그라운드 독립 실행을 말하는데, 이 옵션을 안키면 비밀번호가 틀리다는 에러가 발생함
+
+### pgAdmin
+
+데이터베이스 관리 GUI 툴로 mySQL의 workbench, DBeaver같은 역할을 함
 
 ## 참고
 
